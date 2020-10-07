@@ -1,13 +1,4 @@
 """
-Train a SegNet model
-Usage:
-python train.py --data_root /home/SharedData/intern_sayan/PascalVOC2012/data/VOCdevkit/VOC2012/ \
-                --train_path ImageSets/Segmentation/train.txt \
-                --img_dir JPEGImages \
-                --mask_dir SegmentationClass \
-                --save_dir /home/SharedData/intern_sayan/PascalVOC2012/ \
-                --checkpoint /home/SharedData/intern_sayan/PascalVOC2012/model_best.pth \
-                --gpu 1
 """
 import os
 import time
@@ -54,21 +45,21 @@ def train():
 
         if is_better:
             prev_loss = loss_f
-            torch.save(model.state_dict(), os.path.join(args.save_dir, "model_best.pth"))
+            if not os.path.exists(args.save_dir):
+                os.mkdir(args.save_dir)
+            torch.save(model.state_dict(), os.path.join(args.save_dir, 'best.pth'))
+        print(f'Epoch #{epoch + 1}\tLoss: {loss_f:.8f}\t Time: {delta:2f}s)')
 
-        print("Epoch #{}\tLoss: {:.8f}\t Time: {:2f}s".format(epoch+1, loss_f, delta))
 
-
-if __name__ == "__main__":
-    # Arguments
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train a SegNet model')
-    parser.add_argument('--data_root', required=True)
-    parser.add_argument('--train_path', required=True)
-    parser.add_argument('--img_dir', required=True)
-    parser.add_argument('--mask_dir', required=True)
-    parser.add_argument('--save_dir', required=True)
-    parser.add_argument('--checkpoint')
-    parser.add_argument('--gpu', type=int)
+    parser.add_argument('--data_root', type=str, default='./data/VOCdevkit/VOC2012/')
+    parser.add_argument('--train_path', type=str, default='ImageSets/Segmentation/train.txt')
+    parser.add_argument('--img_dir', type=str, default='JPEGImages')
+    parser.add_argument('--mask_dir', type=str, default='SegmentationClass')
+    parser.add_argument('--save_dir', type=str, default='save')
+    parser.add_argument('--checkpoint', type=str, default='save/best.pth')
+    parser.add_argument('--gpu', type=int, default=0)
     args = parser.parse_args()
 
     NUM_INPUT_CHANNELS = 3
@@ -108,8 +99,7 @@ if __name__ == "__main__":
         class_weights = 1.0/train_dataset.get_class_probability()
         criterion = torch.nn.CrossEntropyLoss(weight=class_weights)
 
-
-    if args.checkpoint:
+    if os.path.exists(args.checkpoint):
         model.load_state_dict(torch.load(args.checkpoint))
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)

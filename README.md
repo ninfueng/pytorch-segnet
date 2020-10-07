@@ -8,4 +8,5 @@ This repo is a re-implementation of SegNet.
 ## To use:
 ```
 
+python train.py --data_root ./data/VOCdevkit/VOC2012/ --train_path ImageSets/Segmentation/train.txt --img_dir JPEGImages --mask_dir SegmentationClass --save_dir ./save
 ```
