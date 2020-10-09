@@ -19,7 +19,7 @@ early_stop_callback = EarlyStopping(
    mode='min')
 
 
-class SegNet(pl.LightningModule):
+class SegNet(pl.LightningModule):    
     def __init__(
             self, 
             class_weights, 
@@ -34,6 +34,8 @@ class SegNet(pl.LightningModule):
         self.output_channels = output_channels
         self.class_weights = class_weights
         self.save_hyperparameters('lr', 'weight_decay')
+        self.IGNORE_IDX = 255
+
         
         self.encoder_conv_00 = nn.Sequential(
             nn.Conv2d(
@@ -393,8 +395,8 @@ class SegNet(pl.LightningModule):
         logits, _ = self.forward(img)
         loss = nn.CrossEntropyLoss(
             weight=self.class_weights, ignore_index=255)(logits, mask)
-        miou = iou(logits.argmax(axis=1), mask)
         
+        miou = iou(logits.argmax(axis=1), mask, ignore_index=self.IGNORE_IDX)
         self.log('train_loss', loss, on_epoch=True)
         self.log('train_miou', miou, on_epoch=True)
 
@@ -408,11 +410,12 @@ class SegNet(pl.LightningModule):
         logits, _ = self.forward(img)
         #weight=self.class_weights
         loss = nn.CrossEntropyLoss(
-            weight=self.class_weights, ignore_index=255)(logits, mask)
-        miou = iou(logits.argmax(axis=1), mask)
+            weight=self.class_weights, 
+            ignore_index=self.IGNORE_IDX)(logits, mask)
+        
+        miou = iou(logits.argmax(axis=1), mask, ignore_index=self.IGNORE_IDX)
         self.log('val_loss', loss, on_epoch=True)
         self.log('val_miou', miou, on_epoch=True)
-        #return {'val_loss': loss, 'val_miou': miou}
     
     def load_vgg16_weight(self) -> None:
         model = vgg16(pretrained=True)

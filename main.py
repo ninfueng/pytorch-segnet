@@ -68,10 +68,11 @@ if __name__ == '__main__':
     parser.add_argument('--workers', type=int, default=8)
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--max_epochs', type=int, default=100)
-    parser.add_argument('--batch_size', type=int, default=8)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--seed', type=int, default=2020)
     args = parser.parse_args()
 
+    NUM_CLASSES = 21
     pl.seed_everything(args.seed)
     train_path = os.path.join(args.data_root, args.train_path)
     val_path = os.path.join(args.data_root, args.val_path)
@@ -83,7 +84,6 @@ if __name__ == '__main__':
     #     crop_size=(224, 224)
     # )
     
-    NUM_CLASSES = 21
     
     train_dataset = VOCSegmentation(
         base_size=256,
