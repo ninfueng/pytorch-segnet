@@ -1,12 +1,29 @@
-# Pytorch SegNet#
+# SegNet Implementation by Pytorch #
+This repo is a re-implementation of [SegNet](https://arxiv.org/abs/1511.00561). The code was forked from []().
 
-This repo is a re-implementation of SegNet.
+## To run:
+1. load Pascal VOC2012 dataset. 
+```bash
+bash load_voc2012.sh
+```
+2. Train and validate the model.
 
-[SegNet: A Deep Convolutional Encoder-Decoder Architecture for Image Segmentation](https://arxiv.org/abs/1511.00561)
-
-
-## To use:
+```bash
+python main.py
 ```
 
-python train.py --data_root ./data/VOCdevkit/VOC2012/ --train_path ImageSets/Segmentation/train.txt --img_dir JPEGImages --mask_dir SegmentationClass --save_dir ./save
+## Requirements:
+```
+torch
+pytorch-lightning
+numpy
+matplotlib
+```
+
+<<<<<<< HEAD
+## License
+```
+MIT
+=======
+>>>>>>> parent of ed85585... Add load_voc2012
 ```
