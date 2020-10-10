@@ -4,49 +4,9 @@ import os
 import argparse
 from dataset import VOCSegmentation
 from model import SegNet
-import torch
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
-from tqdm import tqdm
-import numpy as np
-from collections import Counter
-
-
-def lr_finder_plot(
-        model: pl.LightningModule,
-        trainer: pl.Trainer,
-        train_dataloader=None,
-        val_dataloader=None) -> None:
-    r"""Plotting and suggest a initial learning to train model with.
-    Get for using usable batch and learning rate finding.
-    """
-    if train_dataloader is None or val_dataloader is None:
-        lr_finder = trainer.lr_find(model)
-    else:
-        lr_finder = trainer.lr_find(
-            model, train_dataloader=train_dataloader,
-            val_dataloaders=val_dataloader)
-    recommended_lr = lr_finder.suggestion()
-    print(f'Recommended learning rate: {recommended_lr}')
-    lr_finder.plot(suggest=True, show=True)
-
-
-def cal_class_weights(train_dataloader, num_cls: int)-> torch.Tensor:
-    """From: https://discuss.pytorch.org/t/weights-in-weighted-loss-nn-crossentropyloss/69514
-    The more labels the less amount of weights.
-    """
-    counter = Counter()
-    for batch in tqdm(train_dataloader):
-        mask = batch['label']
-        for i in range(num_cls):
-            count = torch.where(mask == i, torch.ones_like(mask), torch.zeros_like(mask)).sum()
-            counter.update({i: count})
-            
-    counts = torch.tensor([counter[i] for i in range(num_cls)]).float()
-    nor_counts = counts/counts.sum()
-    weights = 1.0/nor_counts
-    nor_weights = (weights/weights.sum()).float()
-    return nor_weights
+from utils import lr_finder_plot, cal_class_weights
 
 
 if __name__ == '__main__':
@@ -69,27 +29,17 @@ if __name__ == '__main__':
     NUM_CLASSES = 21
     pl.seed_everything(args.seed)
     train_path = os.path.join(args.data_root, args.train_path)
-    val_path = os.path.join(args.data_root, args.val_path)
-
-    # train_dataset = PascalVOCDataset(
-    #     root=args.data_root,
-    #     txt_path='ImageSets/Segmentation/train.txt',
-    #     resize_size=(224, 224),
-    #     crop_size=(224, 224)
-    # )
-    
+    val_path = os.path.join(args.data_root, args.val_path)    
     
     train_dataset = VOCSegmentation(
         base_size=224,
         crop_size=224,
-        split='train'
-    )
+        split='train')
     
     val_dataset = VOCSegmentation(
         base_size=224,
         crop_size=224,
-        split='val'
-    )
+        split='val')
 
     train_dataloader = DataLoader(
         train_dataset,
@@ -105,15 +55,16 @@ if __name__ == '__main__':
     
     class_weights = cal_class_weights(train_dataloader, NUM_CLASSES)
     class_weights = class_weights.cuda()
-    
-    
     model = SegNet(
+        lr=args.lr,
         input_channels=3,
         output_channels=NUM_CLASSES,
         class_weights=class_weights)
-    model.load_vgg16_weight()
-
+    model.init_weights()
+    model.load_pretrained_vgg16()
+    
     trainer = pl.Trainer(
         max_epochs=args.max_epochs, gpus=args.gpus, precision=args.precision)
+    
     #lr_finder_plot(model, trainer, train_dataloader, val_dataloader)
     trainer.fit(model, train_dataloader, val_dataloader)

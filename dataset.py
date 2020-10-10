@@ -8,28 +8,16 @@ from torchvision import transforms
 import custom_transforms as tr
 
 
-class Path(object):
-    @staticmethod
-    def db_root_dir(dataset):
-        if dataset == 'pascal':
-            return './data/VOCdevkit/VOC2012/'  # folder that contains VOCdevkit/.
-        else:
-            print('Dataset {} not available.'.format(dataset))
-            raise NotImplementedError
-
 
 class VOCSegmentation(Dataset):
-    """
-    PascalVoc dataset
-    """
     NUM_CLASSES = 21
-
-    def __init__(self,
-                 base_size: int,
-                 crop_size: int,
-                 base_dir=Path.db_root_dir('pascal'),
-                 split='train',
-                 ):
+    
+    def __init__(
+            self,
+            base_size: int,
+            crop_size: int,
+            base_dir='./data/VOCdevkit/VOC2012/',
+            split='train') -> None:
         """
         :param base_dir: path to VOC dataset directory
         :param split: train/val
@@ -148,7 +136,7 @@ def decode_segmap(label_mask, dataset, plot=False):
     b = label_mask.copy()
     for ll in range(0, n_classes):
         r[label_mask == ll] = label_colours[ll, 0]
-        g[label_mask == ll] = label_colours[ll, 1]
+        g[label_mask == ll] = label_colourbase_dirs[ll, 1]
         b[label_mask == ll] = label_colours[ll, 2]
     rgb = np.zeros((label_mask.shape[0], label_mask.shape[1], 3))
     rgb[:, :, 0] = r / 255.0
