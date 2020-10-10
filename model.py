@@ -35,7 +35,7 @@ class SegNet(pl.LightningModule):
         self.class_weights = class_weights
         self.save_hyperparameters('lr', 'weight_decay')
         self.IGNORE_IDX = 255
-
+        self.INPLACE = False
         
         self.encoder_conv_00 = nn.Sequential(
             nn.Conv2d(
@@ -44,7 +44,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.encoder_conv_01 = nn.Sequential(
@@ -54,7 +54,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.INPLACE),
         )
         self.encoder_conv_10 = nn.Sequential(
             nn.Conv2d(
@@ -63,7 +63,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.encoder_conv_11 = nn.Sequential(
@@ -73,7 +73,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.INPLACE),
         )
 
         self.encoder_conv_20 = nn.Sequential(
@@ -83,7 +83,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.encoder_conv_21 = nn.Sequential(
@@ -93,7 +93,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.encoder_conv_22 = nn.Sequential(
@@ -103,7 +103,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.INPLACE),
         )
 
         self.encoder_conv_30 = nn.Sequential(
@@ -113,7 +113,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.encoder_conv_31 = nn.Sequential(
@@ -123,7 +123,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.encoder_conv_32 = nn.Sequential(
@@ -133,7 +133,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.INPLACE),
         )
 
         self.encoder_conv_40 = nn.Sequential(
@@ -143,7 +143,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.encoder_conv_41 = nn.Sequential(
@@ -153,7 +153,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.encoder_conv_42 = nn.Sequential(
@@ -163,7 +163,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=self.INPLACE),
         )
 
         # Decoder layers
@@ -174,7 +174,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_41 = nn.Sequential(
@@ -184,7 +184,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_40 = nn.Sequential(
@@ -194,7 +194,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_32 = nn.Sequential(
@@ -204,7 +204,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_31 = nn.Sequential(
@@ -214,7 +214,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_30 = nn.Sequential(
@@ -224,7 +224,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_22 = nn.Sequential(
@@ -234,7 +234,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_21 = nn.Sequential(
@@ -244,7 +244,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_20 = nn.Sequential(
@@ -254,7 +254,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_11 = nn.Sequential(
@@ -264,7 +264,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_10 = nn.Sequential(
@@ -274,7 +274,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_01 = nn.Sequential(
@@ -284,7 +284,7 @@ class SegNet(pl.LightningModule):
                 kernel_size=3,
                 padding=1),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=self.INPLACE)
         )
 
         self.decoder_convtr_00 = nn.Sequential(
@@ -374,9 +374,9 @@ class SegNet(pl.LightningModule):
         x_01d = self.decoder_convtr_01(x_0d)
         x_00d = self.decoder_convtr_00(x_01d)
         dim_0d = x_00d.size()
-        x_softmax = F.softmax(x_00d, dim=1)
+        #x_softmax = F.softmax(x_00d, dim=1)
 
-        return x_00d, x_softmax
+        return x_00d#, x_softmax
 
     def configure_optimizers(self):
         if self.hparams.lr is None:
@@ -392,7 +392,7 @@ class SegNet(pl.LightningModule):
         img, mask = batch['image'], batch['label']
         img, mask = img.cuda(), mask.cuda()
         img, mask = Variable(img, requires_grad=True), Variable(mask, requires_grad=False)
-        logits, _ = self.forward(img)
+        logits = self.forward(img)
         loss = nn.CrossEntropyLoss(
             weight=self.class_weights, ignore_index=255)(logits, mask)
         
@@ -405,9 +405,9 @@ class SegNet(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         #img, mask = batch
         img, mask = batch['image'],  batch['label']#torch.LongTensor(batch['label'])
-        #img, mask = img.cuda(), mask.cuda()
+        img, mask = img.cuda(), mask.cuda()
         img = Variable(img, requires_grad=False)
-        logits, _ = self.forward(img)
+        logits = self.forward(img)
         #weight=self.class_weights
         loss = nn.CrossEntropyLoss(
             weight=self.class_weights, 

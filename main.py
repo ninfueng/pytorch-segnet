@@ -69,6 +69,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--max_epochs', type=int, default=200)
     parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--precision', type=int, default=32)
     parser.add_argument('--seed', type=int, default=2020)
     args = parser.parse_args()
 
@@ -125,6 +126,7 @@ if __name__ == '__main__':
         class_weights=class_weights)
     model.load_vgg16_weight()
 
-    trainer = pl.Trainer(max_epochs=args.max_epochs, gpus=args.gpus, precision=16)
+    trainer = pl.Trainer(
+        max_epochs=args.max_epochs, gpus=args.gpus, precision=args.precision)
     #lr_finder_plot(model, trainer, train_dataloader, val_dataloader)
     trainer.fit(model, train_dataloader, val_dataloader)
