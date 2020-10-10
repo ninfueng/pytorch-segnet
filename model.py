@@ -26,7 +26,7 @@ class SegNet(pl.LightningModule):
             input_channels: int, 
             output_channels: int, 
             lr: float=1e-3, 
-            weight_decay: float=1e-4):
+            weight_decay: float=1e-5):
         
         super().__init__()
         self.input_channels = input_channels

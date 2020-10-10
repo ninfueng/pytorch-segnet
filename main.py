@@ -86,7 +86,7 @@ if __name__ == '__main__':
     
     
     train_dataset = VOCSegmentation(
-        base_size=256,
+        base_size=224,
         crop_size=224,
         split='train'
     )
