@@ -9,6 +9,8 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from tqdm import tqdm
 import numpy as np
+from collections import Counter
+
 
 def lr_finder_plot(
         model: pl.LightningModule,
@@ -29,31 +31,22 @@ def lr_finder_plot(
     lr_finder.plot(suggest=True, show=True)
 
 
-def calculate_weigths_labels(dataloader, num_classes):
-    # Create an instance from the data loader
-    z = np.zeros((num_classes,))
-    # Initialize tqdm
-    tqdm_batch = tqdm(dataloader)
-    print('Calculating classes weights')
-    for sample in tqdm_batch:
-        y = sample['label']
-        #_, y = sample
-        #print(y)
-        y = y.detach().cpu().numpy()
-        mask = (y >= 0) & (y < num_classes)
-        labels = y[mask].astype(np.uint8)
-        count_l = np.bincount(labels, minlength=num_classes)
-        z += count_l
-    tqdm_batch.close()
-    total_frequency = np.sum(z)
-    class_weights = []
-    for frequency in z:
-        class_weight = 1 / (np.log(1.02 + (frequency / total_frequency)))
-        class_weights.append(class_weight)
-    ret = np.array(class_weights)
-    #classes_weights_path = os.path.join(Path.db_root_dir(dataset), dataset+'_classes_weights.npy')
-    #np.save(classes_weights_path, ret)
-    return ret
+def cal_class_weights(train_dataloader, num_cls: int)-> torch.Tensor:
+    """From: https://discuss.pytorch.org/t/weights-in-weighted-loss-nn-crossentropyloss/69514
+    The more labels the less amount of weights.
+    """
+    counter = Counter()
+    for batch in tqdm(train_dataloader):
+        mask = batch['label']
+        for i in range(num_cls):
+            count = torch.where(mask == i, torch.ones_like(mask), torch.zeros_like(mask)).sum()
+            counter.update({i: count})
+            
+    counts = torch.tensor([counter[i] for i in range(num_cls)]).float()
+    nor_counts = counts/counts.sum()
+    weights = 1.0/nor_counts
+    nor_weights = (weights/weights.sum()).float()
+    return nor_weights
 
 
 if __name__ == '__main__':
@@ -69,7 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--max_epochs', type=int, default=200)
     parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--precision', type=int, default=32)
+    parser.add_argument('--precision', type=int, default=16)
     parser.add_argument('--seed', type=int, default=2020)
     args = parser.parse_args()
 
@@ -110,16 +103,10 @@ if __name__ == '__main__':
         shuffle=False,
         num_workers=args.workers)
     
-    #class_weights = 1.0/calculate_weigths_labels(train_dataloader, NUM_CLASSES)
-    class_weights = torch.tensor([
-        0.5220, 0.0300, 0.0230, 0.0304, 
-        0.0273, 0.0279, 0.0444, 0.0395, 
-        0.0556, 0.0308, 0.0298, 0.0339, 
-        0.0415, 0.0318, 0.0352, 0.0748, 
-        0.0274, 0.0314, 0.0335, 0.0409,
-        0.0311])
+    class_weights = cal_class_weights(train_dataloader, NUM_CLASSES)
+    class_weights = class_weights.cuda()
     
-    class_weights = class_weights.float().cuda()
+    
     model = SegNet(
         input_channels=3,
         output_channels=NUM_CLASSES,

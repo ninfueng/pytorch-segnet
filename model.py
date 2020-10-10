@@ -10,14 +10,12 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.metrics.functional.classification import iou
 
-
 early_stop_callback = EarlyStopping(
    monitor='val_loss',
    min_delta=0.00,
    patience=5,
    verbose=True,
    mode='min')
-
 
 class SegNet(pl.LightningModule):    
     def __init__(
