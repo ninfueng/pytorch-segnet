@@ -1,5 +1,3 @@
-"""
-"""
 import os
 import argparse
 from dataset import VOCSegmentation
@@ -20,13 +18,14 @@ if __name__ == '__main__':
     parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--workers', type=int, default=8)
     parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--max_epochs', type=int, default=200)
+    parser.add_argument('--max_epochs', type=int, default=600)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--precision', type=int, default=16)
     parser.add_argument('--seed', type=int, default=2020)
     args = parser.parse_args()
 
     NUM_CLASSES = 21
+    milestones = [200, 400]
     pl.seed_everything(args.seed)
     train_path = os.path.join(args.data_root, args.train_path)
     val_path = os.path.join(args.data_root, args.val_path)    
@@ -56,15 +55,16 @@ if __name__ == '__main__':
     class_weights = cal_class_weights(train_dataloader, NUM_CLASSES)
     class_weights = class_weights.cuda()
     model = SegNet(
+        milestones=milestones,
         lr=args.lr,
         input_channels=3,
         output_channels=NUM_CLASSES,
         class_weights=class_weights)
     model.init_weights()
     model.load_pretrained_vgg16()
-    
+
+
     trainer = pl.Trainer(
         max_epochs=args.max_epochs, gpus=args.gpus, precision=args.precision)
-    
     #lr_finder_plot(model, trainer, train_dataloader, val_dataloader)
     trainer.fit(model, train_dataloader, val_dataloader)

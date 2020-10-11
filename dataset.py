@@ -8,10 +8,7 @@ from torchvision import transforms
 import custom_transforms as tr
 
 
-
-class VOCSegmentation(Dataset):
-    NUM_CLASSES = 21
-    
+class VOCSegmentation(Dataset):    
     def __init__(
             self,
             base_size: int,
@@ -19,8 +16,6 @@ class VOCSegmentation(Dataset):
             base_dir='./data/VOCdevkit/VOC2012/',
             split='train') -> None:
         """
-        :param base_dir: path to VOC dataset directory
-        :param split: train/val
         """
         super().__init__()
         self._base_dir = base_dir
@@ -84,16 +79,19 @@ class VOCSegmentation(Dataset):
             #tr.RandomHorizontalFlip(),
             #tr.RandomScaleCrop(base_size=self.base_size, crop_size=self.crop_size),
             ##tr.RandomGaussianBlur(),
-            tr.FixScaleCrop(crop_size=self.crop_size),
-            tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            #tr.FixScaleCrop(crop_size=self.crop_size),
+            tr.FixedResize(self.crop_size),
+            tr.Normalize(),
+            #tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
         return composed_transforms(sample)
 
     def transform_val(self, sample):
-
         composed_transforms = transforms.Compose([
-            tr.FixScaleCrop(crop_size=self.crop_size),
-            tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            #tr.FixScaleCrop(crop_size=self.crop_size),
+            tr.FixedResize(self.crop_size),
+            tr.Normalize(),
+            #tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
         return composed_transforms(sample)
 
@@ -183,3 +181,22 @@ if __name__ == '__main__':
             break
 
     plt.show(block=True)
+
+
+    # import numpy as np
+    # import matplotlib.pyplot as plt
+    # batch = next(iter(val_dataloader))
+    
+    # x, y = batch['image'], batch['label']
+    # x  = x[0, ::].permute(1, 2, 0).numpy()
+    # # xx = x[0, ::]
+    # # xx = np.transpose(xx, (2, 0, 1))
+    
+    # y = y[0, :, :]
+    
+    # plt.imshow(x)
+    # plt.show()
+    
+    # plt.imshow(y)
+    # plt.show()
+    

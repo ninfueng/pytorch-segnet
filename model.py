@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim.lr_scheduler import MultiStepLR, ReduceLROnPlateau
 from torchvision.models import vgg16, vgg16_bn
 from torch.autograd import Variable
 import torch.nn.functional as F
@@ -24,17 +25,20 @@ class SegNet(pl.LightningModule):
             input_channels: int = 3, 
             output_channels: int = 21,
             ignore_idx: int = 255,
-            lr: float=1e-3,
-            weight_decay: float=1e-5):
-        
+            lr: float = 1e-3,
+            weight_decay: float = 1e-5,
+            milestones: list = None):
+
         super().__init__()
         self.input_channels = input_channels
         self.num_channels = input_channels
         self.output_channels = output_channels
-        self.lr = lr
+        #self.lr = lr
+        #self.weight_decay = weight_decay
         self.save_hyperparameters('lr', 'weight_decay')
         self.ignore_idx = ignore_idx
         self.INPLACE = True
+        self.milestones = milestones
         
         if class_weights is None:
             self.class_weights = [
@@ -362,23 +366,26 @@ class SegNet(pl.LightningModule):
         return x_00d#, x_softmax
 
     def configure_optimizers(self):
-        if self.hparams.lr is None:
-            lr = 1e-3
-        else:
-            lr = (self.lr or self.learning_rate)
-        optimizer = optim.Adam(self.parameters(), lr=lr)
+        optimizer = optim.AdamW(
+            self.parameters(), lr=self.hparams.lr,
+            weight_decay=self.hparams.weight_decay)
+        if self.milestones is None:
+            scheduler = MultiStepLR(optimizer, milestones=self.milestones, gamma=0.1)
         #, weight_decay=self.hparams.weight_decay
-        return optimizer
+            return [optimizer], [scheduler]
+        else:
+            return optimizer
 
     def training_step(self, batch, batch_idx):
         #img, mask = batch
         img, mask = batch['image'], batch['label']
         img, mask = img.cuda(), mask.cuda()
-        img, mask = Variable(img, requires_grad=True), Variable(mask, requires_grad=False)
+        #img, mask = Variable(img, requires_grad=True), Variable(mask, requires_grad=False)
         logits = self.forward(img)
         loss = nn.CrossEntropyLoss(
             weight=self.class_weights, ignore_index=255)(logits, mask)
         
+        logits = F.softmax(logits, axis=1)
         miou = iou(logits.argmax(axis=1), mask, ignore_index=self.ignore_idx)
         self.log('train_loss', loss, on_epoch=True)
         self.log('train_miou', miou, on_epoch=True)
@@ -387,15 +394,16 @@ class SegNet(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         #img, mask = batch
-        img, mask = batch['image'],  batch['label']#torch.LongTensor(batch['label'])
+        img, mask = batch['image'],  batch['label']
         img, mask = img.cuda(), mask.cuda()
-        img = Variable(img, requires_grad=False)
+        #img = Variable(img, requires_grad=False)
         logits = self.forward(img)
         #weight=self.class_weights
         loss = nn.CrossEntropyLoss(
             weight=self.class_weights, 
             ignore_index=self.ignore_idx)(logits, mask)
         
+        logits = F.softmax(logits, axis=1)
         miou = iou(logits.argmax(axis=1), mask, ignore_index=self.ignore_idx)
         self.log('val_loss', loss, on_epoch=True)
         self.log('val_miou', miou, on_epoch=True)
@@ -429,6 +437,9 @@ class SegNet(pl.LightningModule):
         print('Finished load VGG16 weights.')
     
     def init_weights(self):
+        """Initialize weights and biases of models. 
+        From: https://github.com/pytorch/examples/blob/master/dcgan/main.py
+        """
         for ch in self.children():
             for c in ch:
                 if isinstance(c, nn.Conv2d):
@@ -436,7 +447,6 @@ class SegNet(pl.LightningModule):
                     if c.bias is not None:
                         nn.init.zeros_(c.bias)
                 elif isinstance(c, nn.BatchNorm2d):
-                    # From https://github.com/pytorch/examples/blob/master/dcgan/main.py
                     torch.nn.init.normal_(c.weight, 1.0, 0.02)
                     torch.nn.init.zeros_(c.bias)
                 elif isinstance(c, nn.Linear):
@@ -450,9 +460,6 @@ class SegNet(pl.LightningModule):
                 # else:
                 #     print(f'{c} is not initialize.')
                     
-            
-            
-        
 
 if __name__ == '__main__':
     model = SegNet(
