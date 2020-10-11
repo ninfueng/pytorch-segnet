@@ -14,9 +14,10 @@ from pytorch_lightning.metrics.functional.classification import iou
 early_stop_callback = EarlyStopping(
    monitor='val_loss',
    min_delta=0.00,
-   patience=5,
+   patience=10,
    verbose=True,
    mode='min')
+
 
 class SegNet(pl.LightningModule):
     def __init__(
@@ -26,19 +27,20 @@ class SegNet(pl.LightningModule):
             output_channels: int = 21,
             ignore_idx: int = 255,
             lr: float = 1e-3,
-            weight_decay: float = 1e-5,
+            weight_decay: float = 1e-6,
+            batch_size: int = 32,
             milestones: list = None):
 
         super().__init__()
         self.input_channels = input_channels
         self.num_channels = input_channels
         self.output_channels = output_channels
-        #self.lr = lr
-        #self.weight_decay = weight_decay
-        self.save_hyperparameters('lr', 'weight_decay')
+        self.save_hyperparameters(
+            'lr', 'weight_decay', 'batch_size')
         self.ignore_idx = ignore_idx
-        self.INPLACE = True
         self.milestones = milestones
+        self.INPLACE = True
+
         
         if class_weights is None:
             self.class_weights = [
@@ -50,6 +52,7 @@ class SegNet(pl.LightningModule):
         else:
             self.class_weights = class_weights
         
+        # Model definitation.
         self.conv_00 = nn.Sequential(
             nn.Conv2d(
                 in_channels=self.input_channels,
@@ -366,12 +369,20 @@ class SegNet(pl.LightningModule):
         return x_00d#, x_softmax
 
     def configure_optimizers(self):
+        
+        lr = self.hparams.lr
+        # decoder = self.get_10x_lr_children()
+        # encoder = self.get_1x_lr_children()
+        # list_optims = [
+        #     {'params': decoder, 'lr': lr}, 
+        #     {'params': encoder, 'lr': lr*10}]
+
         optimizer = optim.AdamW(
-            self.parameters(), lr=self.hparams.lr,
+            self.parameters(),
             weight_decay=self.hparams.weight_decay)
         if self.milestones is None:
-            scheduler = MultiStepLR(optimizer, milestones=self.milestones, gamma=0.1)
-        #, weight_decay=self.hparams.weight_decay
+            scheduler = MultiStepLR(
+                optimizer, milestones=self.milestones, gamma=0.1)
             return [optimizer], [scheduler]
         else:
             return optimizer
@@ -385,8 +396,8 @@ class SegNet(pl.LightningModule):
         loss = nn.CrossEntropyLoss(
             weight=self.class_weights, ignore_index=255)(logits, mask)
         
-        logits = F.softmax(logits, axis=1)
-        miou = iou(logits.argmax(axis=1), mask, ignore_index=self.ignore_idx)
+        logits = F.softmax(logits, dim=1)
+        miou = iou(logits.argmax(dim=1), mask, ignore_index=self.ignore_idx)
         self.log('train_loss', loss, on_epoch=True)
         self.log('train_miou', miou, on_epoch=True)
 
@@ -403,8 +414,8 @@ class SegNet(pl.LightningModule):
             weight=self.class_weights, 
             ignore_index=self.ignore_idx)(logits, mask)
         
-        logits = F.softmax(logits, axis=1)
-        miou = iou(logits.argmax(axis=1), mask, ignore_index=self.ignore_idx)
+        logits = F.softmax(logits, dim=1)
+        miou = iou(logits.argmax(dim=1), mask, ignore_index=self.ignore_idx)
         self.log('val_loss', loss, on_epoch=True)
         self.log('val_miou', miou, on_epoch=True)
     
@@ -457,9 +468,31 @@ class SegNet(pl.LightningModule):
                     nn.init.kaiming_uniform_(c.weight, nonlinearity='relu')
                     if c.bias is not None:
                         nn.init.zeros_(c.bias)
-                # else:
-                #     print(f'{c} is not initialize.')
-                    
+                else:
+                    print(f'{c.__class__.__name__} is not initialized.')
+    
+    def get_1x_lr_children(self) -> list:
+        """Find children from name. Designed for finding 1x learning `conv` and
+        finding 10x learning `deconv`.
+        """
+        params = []
+        filter_name: str = 'conv'
+        filter_name2: str = 'deconv'
+        for name, child in self.named_children():
+            if name.find(filter_name) != -1:
+                if name.find(filter_name2) != -1:
+                    continue
+                params += list(child.parameters()) 
+        return params
+
+    def get_10x_lr_children(self) -> list:
+        params = []
+        filter_name: str = 'deconv'
+        for name, child in self.named_children():
+            if name.find(filter_name) != -1:
+                params += list(child.parameters()) 
+        return params
+
 
 if __name__ == '__main__':
     model = SegNet(

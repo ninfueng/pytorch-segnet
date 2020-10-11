@@ -11,15 +11,16 @@ import pytorch_lightning as pl
 def lr_finder_plot(
         model: pl.LightningModule,
         trainer: pl.Trainer,
-        train_dataloader=None,
-        val_dataloader=None) -> None:
+        train_dataloader = None,
+        val_dataloader = None) -> None:
     r"""Plotting and suggest a initial learning to train model with.
     Get for using usable batch and learning rate finding.
     """
     if not hasattr(trainer, 'lr_find'):
-        # lightning version > 1.0.
+        # This indicates pytorch-lightning version >= 1.0.
         trainer = trainer.tuner
     if train_dataloader is None or val_dataloader is None:
+        # This indicates trainer contains methods related to dataloader.
         lr_finder = trainer.lr_find(model)
     else:
         lr_finder = trainer.lr_find(

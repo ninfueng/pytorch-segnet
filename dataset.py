@@ -134,7 +134,7 @@ def decode_segmap(label_mask, dataset, plot=False):
     b = label_mask.copy()
     for ll in range(0, n_classes):
         r[label_mask == ll] = label_colours[ll, 0]
-        g[label_mask == ll] = label_colourbase_dirs[ll, 1]
+        g[label_mask == ll] = label_colours[ll, 1]
         b[label_mask == ll] = label_colours[ll, 2]
     rgb = np.zeros((label_mask.shape[0], label_mask.shape[1], 3))
     rgb[:, :, 0] = r / 255.0
