@@ -388,9 +388,9 @@ class SegNet(pl.LightningModule):
             return optimizer
 
     def training_step(self, batch, batch_idx):
-        #img, mask = batch
-        img, mask = batch['image'], batch['label']
-        img, mask = img.cuda(), mask.cuda()
+        img, mask = batch
+        #img, mask = batch['image'], batch['label']
+        #img, mask = img.cuda(), mask.cuda()
         #img, mask = Variable(img, requires_grad=True), Variable(mask, requires_grad=False)
         logits = self.forward(img)
         loss = nn.CrossEntropyLoss(
@@ -404,9 +404,9 @@ class SegNet(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        #img, mask = batch
-        img, mask = batch['image'],  batch['label']
-        img, mask = img.cuda(), mask.cuda()
+        img, mask = batch
+        #img, mask = batch['image'],  batch['label']
+        #img, mask = img.cuda(), mask.cuda()
         #img = Variable(img, requires_grad=False)
         logits = self.forward(img)
         #weight=self.class_weights

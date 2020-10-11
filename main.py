@@ -1,6 +1,6 @@
 import os
 import argparse
-from dataset import VOCSegmentation
+from dataset import VOCSegDataset
 from model import SegNet
 import torch
 from torch.utils.data import DataLoader
@@ -28,17 +28,17 @@ if __name__ == '__main__':
 
     NUM_CLASSES = 21
     MILESTONES = [200, 400]
-    BASE_SIZE = 224
-    CROP_SIZE = 224
+    RESIZE_SIZE = (256, 256)
+    CROP_SIZE = (224, 224)
+    IN_CHANNEL = 3
     
     pl.seed_everything(args.seed)
     train_path = os.path.join(args.data_root, args.train_path)
     val_path = os.path.join(args.data_root, args.val_path)    
-    
-    train_dataset = VOCSegmentation(
-        base_size=BASE_SIZE, crop_size=CROP_SIZE, split='train')
-    val_dataset = VOCSegmentation(
-        base_size=BASE_SIZE, crop_size=CROP_SIZE, split='val')
+    train_dataset = VOCSegDataset(
+        resize_size=RESIZE_SIZE, crop_size=CROP_SIZE, train=True)
+    val_dataset = VOCSegDataset(
+        resize_size=RESIZE_SIZE, crop_size=CROP_SIZE, train=False)
 
     train_dataloader = DataLoader(
         train_dataset,
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     model = SegNet(
         milestones=MILESTONES,
         lr=args.lr,
-        input_channels=3,
+        input_channels=IN_CHANNEL,
         output_channels=NUM_CLASSES,
         class_weights=class_weights,
         weight_decay=args.weight_decay)
@@ -75,4 +75,3 @@ if __name__ == '__main__':
     tuner = pl.tuner.tuning.Tuner(trainer)
     #lr_finder_plot(model, trainer, train_dataloader, val_dataloader)
     trainer.fit(model, train_dataloader, val_dataloader)
-
