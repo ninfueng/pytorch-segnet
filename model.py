@@ -427,8 +427,8 @@ class SegNet(pl.LightningModule):
         """
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
         avg_iou = torch.stack([x['val_miou'] for x in outputs]).mean()
-        return {'val_avg_loss': avg_loss, 'val_avg_iou': avg_iou}
-
+        self.log('val_avg_loss', avg_loss, on_epoch=True)
+        self.log('val_avg_iou', avg_iou, on_epoch=True)
     
     def load_pretrained_vgg16(self) -> None:
         r"""Load pretrained VGG16 weight to SegNet.
