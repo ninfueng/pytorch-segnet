@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.metrics.functional.classification import iou
+from utils import IoU
 
 early_stop_callback = EarlyStopping(
    monitor='val_loss',
@@ -40,6 +41,7 @@ class SegNet(pl.LightningModule):
         self.ignore_idx = ignore_idx
         self.milestones = milestones
         self.INPLACE = True
+        self.iou = IoU(21, ignore_index=255)
 
         
         if class_weights is None:
@@ -389,35 +391,44 @@ class SegNet(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         img, mask = batch
-        #img, mask = batch['image'], batch['label']
-        #img, mask = img.cuda(), mask.cuda()
-        #img, mask = Variable(img, requires_grad=True), Variable(mask, requires_grad=False)
         logits = self.forward(img)
         loss = nn.CrossEntropyLoss(
             weight=self.class_weights, ignore_index=255)(logits, mask)
         
         logits = F.softmax(logits, dim=1)
+        
         miou = iou(logits.argmax(dim=1), mask, ignore_index=self.ignore_idx)
+        #_, miou = self.iou.add(logits.argmax(dim=1).detach(), mask.detach())
+        
         self.log('train_loss', loss, on_epoch=True)
         self.log('train_miou', miou, on_epoch=True)
-
         return loss
 
     def validation_step(self, batch, batch_idx):
         img, mask = batch
-        #img, mask = batch['image'],  batch['label']
-        #img, mask = img.cuda(), mask.cuda()
-        #img = Variable(img, requires_grad=False)
         logits = self.forward(img)
-        #weight=self.class_weights
         loss = nn.CrossEntropyLoss(
             weight=self.class_weights, 
             ignore_index=self.ignore_idx)(logits, mask)
         
         logits = F.softmax(logits, dim=1)
         miou = iou(logits.argmax(dim=1), mask, ignore_index=self.ignore_idx)
+
+        #miou = iou.add(logits.detach(), mask.detach())
+        #_, miou = self.iou.add(logits.argmax(dim=1).detach(), mask.detach())
         self.log('val_loss', loss, on_epoch=True)
         self.log('val_miou', miou, on_epoch=True)
+        
+        return {'val_loss': loss, 'val_miou': miou}
+        
+    
+    def validation_epoch_end(self, outputs):
+        r"""
+        """
+        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+        avg_iou = torch.stack([x['val_miou'] for x in outputs]).mean()
+        return {'val_avg_loss': avg_loss, 'val_avg_iou': avg_iou}
+
     
     def load_pretrained_vgg16(self) -> None:
         r"""Load pretrained VGG16 weight to SegNet.
@@ -499,7 +510,7 @@ if __name__ == '__main__':
         input_channels=3,
         output_channels=21)
     print(model)
-    
+
     model.load_pretrained_vgg16() 
     
     
