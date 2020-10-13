@@ -6,6 +6,8 @@ import torch
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.callbacks import LearningRateMonitor
 from utils import lr_finder_plot, cal_class_weights
 
 
@@ -18,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_dir', type=str, default='save')
     parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--workers', type=int, default=8)
-    parser.add_argument('--lr', type=float, default=1e1)
+    parser.add_argument('--lr', type=float, default=1e-1)
     parser.add_argument('--weight_decay', type=float, default=1e-6)
     parser.add_argument('--max_epochs', type=int, default=2_000)
     parser.add_argument('--batch_size', type=int, default=32)
@@ -69,6 +71,17 @@ if __name__ == '__main__':
          0.0097, 0.0717, 0.0524, 0.0321, 0.0292, 0.0515])
     class_weights = class_weights.cuda()
     
+    early_stop_callback = EarlyStopping(
+        monitor='val_loss',
+        min_delta=0.00,
+        patience=10,
+        verbose=True,
+        mode='min')
+    callbacks = [
+        #early_stop_callback,
+        #lr_monitor,
+        ]
+    
     model = SegNet(
         milestones=MILESTONES,
         lr=args.lr,
@@ -86,8 +99,8 @@ if __name__ == '__main__':
     trainer = pl.Trainer(
         max_epochs=args.max_epochs, gpus=args.gpus,
         precision=args.precision, 
-        checkpoint_callback=checkpoint_callback)
-    
-    tuner = pl.tuner.tuning.Tuner(trainer)
+        checkpoint_callback=checkpoint_callback,
+        callbacks=callbacks)
+    #tuner = pl.tuner.tuning.Tuner(trainer)
     #lr_finder_plot(model, trainer, train_dataloader, val_dataloader)
     trainer.fit(model, train_dataloader, val_dataloader)

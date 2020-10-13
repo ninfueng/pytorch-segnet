@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
+
 class VOCSegDataset(Dataset):    
     def __init__(
             self,

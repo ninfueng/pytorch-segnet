@@ -8,16 +8,8 @@ from torchvision.models import vgg16, vgg16_bn
 from torch.autograd import Variable
 import torch.nn.functional as F
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.metrics.functional.classification import iou
 from utils import IoU
-
-early_stop_callback = EarlyStopping(
-   monitor='val_loss',
-   min_delta=0.00,
-   patience=10,
-   verbose=True,
-   mode='min')
 
 
 class SegNet(pl.LightningModule):
@@ -40,9 +32,8 @@ class SegNet(pl.LightningModule):
             'lr', 'weight_decay', 'batch_size')
         self.ignore_idx = ignore_idx
         self.milestones = milestones
+        self.optimizers = None
         self.INPLACE = True
-        #self.iou = IoU(21, ignore_index=self.ignore_idx)
-
         
         if class_weights is None:
             self.class_weights = [
@@ -378,12 +369,11 @@ class SegNet(pl.LightningModule):
         # list_optims = [
         #     {'params': decoder, 'lr': lr}, 
         #     {'params': encoder, 'lr': lr*10}]
-
         # optimizer = optim.AdamW(
         #     self.parameters(),
         #     weight_decay=self.hparams.weight_decay)
         
-        optimizer = optim.SGD(
+        self.optimizers = optim.SGD(
             self.parameters(),
             weight_decay=self.hparams.weight_decay,
             lr=self.hparams.lr,
@@ -391,27 +381,40 @@ class SegNet(pl.LightningModule):
         
         if self.milestones is None:
             scheduler = MultiStepLR(
-                optimizer, milestones=self.milestones, gamma=0.1)
-            return [optimizer], [scheduler]
+                self.optimizers, milestones=self.milestones, gamma=0.1)
+            lr_scheduler = {'scheduler': scheduler,
+                'SGD': self.optimizers}
+            return [self.optimizers], [lr_scheduler]
         else:
-            return optimizer
+            return self.optimizers
 
     def training_step(self, batch, batch_idx):
         img, mask = batch
         logits = self.forward(img)
         loss = nn.CrossEntropyLoss(
-            weight=self.class_weights, ignore_index=self.ignore_idx)(logits, mask)
+            weight=self.class_weights, 
+            ignore_index=self.ignore_idx)(logits, mask)
         
         logits = F.softmax(logits, dim=1)
         miou = iou(
             logits.argmax(dim=1), mask, 
             ignore_index=self.ignore_idx,
             num_classes=self.output_channels)
-        #_, miou = self.iou.add(logits.argmax(dim=1).detach(), mask.detach())
-        
         self.log('train_loss', loss, on_epoch=True)
         self.log('train_miou', miou, on_epoch=True)
         return loss
+    
+    
+    def on_epoch_start(self):
+        #self.log('learning_rate', self.optimizers.param_groups[0]['lr'], on_epoch=True)
+        print(self.optimizers.param_groups[0]['lr'])
+        
+    # def training_epoch_end(self, outputs):
+    #     miou = iou(
+    #         logits.argmax(dim=1), mask, 
+    #         ignore_index=self.ignore_idx,
+    #         num_classes=self.output_channels)
+
 
     def validation_step(self, batch, batch_idx):
         img, mask = batch
@@ -425,22 +428,21 @@ class SegNet(pl.LightningModule):
             logits.argmax(dim=1), mask, 
             ignore_index=self.ignore_idx,
             num_classes=self.output_channels)
-
-        #miou = iou.add(logits.detach(), mask.detach())
-        #_, miou = self.iou.add(logits.argmax(dim=1).detach(), mask.detach())
-        self.log('val_loss', loss, on_epoch=True)
-        self.log('val_miou', miou, on_epoch=True)
-        
-        return {'val_loss': loss, 'val_miou': miou}
-        
+        self.log('val_loss', loss)
+        self.log('val_miou', miou)
+        return loss
     
-    def validation_epoch_end(self, outputs):
-        r"""
-        """
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        avg_iou = torch.stack([x['val_miou'] for x in outputs]).mean()
-        self.log('val_avg_loss', avg_loss, on_epoch=True)
-        self.log('val_avg_iou', avg_iou, on_epoch=True)
+    # def validation_epoch_end(self, outputs):
+    #     r"""
+    #     """
+        
+    #     avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+    #     avg_iou = torch.stack([x['val_miou'] for x in outputs]).mean()
+        
+    #     print()
+    #     self.log('val_avg_loss', avg_loss, on_epoch=True)
+    #     self.log('val_avg_iou', avg_iou, on_epoch=True)
+        
     
     def load_pretrained_vgg16(self) -> None:
         r"""Load pretrained VGG16 weight to SegNet.
