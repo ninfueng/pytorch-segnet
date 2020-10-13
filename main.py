@@ -22,14 +22,14 @@ if __name__ == '__main__':
     parser.add_argument('--workers', type=int, default=8)
     parser.add_argument('--lr', type=float, default=1e-1)
     parser.add_argument('--weight_decay', type=float, default=1e-6)
-    parser.add_argument('--max_epochs', type=int, default=2_000)
+    parser.add_argument('--max_epochs', type=int, default=1_200)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--precision', type=int, default=16)
     parser.add_argument('--seed', type=int, default=2020)
     args = parser.parse_args()
 
     NUM_CLASSES = 21
-    MILESTONES = [300, 600, 900, 1200, 1500, 1800]
+    MILESTONES = [300, 600, 900]
     RESIZE_SIZE = (256, 256)
     CROP_SIZE = (224, 224)
     IN_CHANNEL = 3

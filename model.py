@@ -29,10 +29,10 @@ class SegNet(pl.LightningModule):
         self.num_channels = input_channels
         self.output_channels = output_channels
         self.save_hyperparameters(
-            'lr', 'weight_decay', 'batch_size')
+            'lr', 'weight_decay', 'batch_size', 'milestones')
         self.ignore_idx = ignore_idx
         self.milestones = milestones
-        self.optimizers = None
+        self.optimizer = None
         self.INPLACE = True
         
         if class_weights is None:
@@ -373,20 +373,15 @@ class SegNet(pl.LightningModule):
         #     self.parameters(),
         #     weight_decay=self.hparams.weight_decay)
         
-        self.optimizers = optim.SGD(
+        self.optimizer = optim.SGD(
             self.parameters(),
             weight_decay=self.hparams.weight_decay,
             lr=self.hparams.lr,
             momentum=0.9)
         
-        if self.milestones is None:
-            scheduler = MultiStepLR(
-                self.optimizers, milestones=self.milestones, gamma=0.1)
-            lr_scheduler = {'scheduler': scheduler,
-                'SGD': self.optimizers}
-            return [self.optimizers], [lr_scheduler]
-        else:
-            return self.optimizers
+        self.scheduler = MultiStepLR(
+            self.optimizer, milestones=self.milestones, gamma=0.1)
+        return [self.optimizer], [self.scheduler]
 
     def training_step(self, batch, batch_idx):
         img, mask = batch
@@ -404,11 +399,12 @@ class SegNet(pl.LightningModule):
         self.log('train_miou', miou, on_epoch=True)
         return loss
     
-    
-    def on_epoch_start(self):
-        #self.log('learning_rate', self.optimizers.param_groups[0]['lr'], on_epoch=True)
-        print(self.optimizers.param_groups[0]['lr'])
-        
+   #  
+    # def on_epoch_start(self):
+        # self.log('learning_rate', self.optimizers.param_groups[0]['lr'], on_epoch=true)
+        # print(self.optimizer.param_groups[0]['lr'])
+        # print(self.scheduler.get_last_lr()[0])
+   #      
     # def training_epoch_end(self, outputs):
     #     miou = iou(
     #         logits.argmax(dim=1), mask, 
