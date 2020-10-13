@@ -41,7 +41,7 @@ class SegNet(pl.LightningModule):
         self.ignore_idx = ignore_idx
         self.milestones = milestones
         self.INPLACE = True
-        self.iou = IoU(21, ignore_index=255)
+        #self.iou = IoU(21, ignore_index=self.ignore_idx)
 
         
         if class_weights is None:
@@ -379,9 +379,16 @@ class SegNet(pl.LightningModule):
         #     {'params': decoder, 'lr': lr}, 
         #     {'params': encoder, 'lr': lr*10}]
 
-        optimizer = optim.AdamW(
+        # optimizer = optim.AdamW(
+        #     self.parameters(),
+        #     weight_decay=self.hparams.weight_decay)
+        
+        optimizer = optim.SGD(
             self.parameters(),
-            weight_decay=self.hparams.weight_decay)
+            weight_decay=self.hparams.weight_decay,
+            lr=self.hparams.lr,
+            momentum=0.9)
+        
         if self.milestones is None:
             scheduler = MultiStepLR(
                 optimizer, milestones=self.milestones, gamma=0.1)
@@ -393,11 +400,13 @@ class SegNet(pl.LightningModule):
         img, mask = batch
         logits = self.forward(img)
         loss = nn.CrossEntropyLoss(
-            weight=self.class_weights, ignore_index=255)(logits, mask)
+            weight=self.class_weights, ignore_index=self.ignore_idx)(logits, mask)
         
         logits = F.softmax(logits, dim=1)
-        
-        miou = iou(logits.argmax(dim=1), mask, ignore_index=self.ignore_idx)
+        miou = iou(
+            logits.argmax(dim=1), mask, 
+            ignore_index=self.ignore_idx,
+            num_classes=self.output_channels)
         #_, miou = self.iou.add(logits.argmax(dim=1).detach(), mask.detach())
         
         self.log('train_loss', loss, on_epoch=True)
@@ -412,7 +421,10 @@ class SegNet(pl.LightningModule):
             ignore_index=self.ignore_idx)(logits, mask)
         
         logits = F.softmax(logits, dim=1)
-        miou = iou(logits.argmax(dim=1), mask, ignore_index=self.ignore_idx)
+        miou = iou(
+            logits.argmax(dim=1), mask, 
+            ignore_index=self.ignore_idx,
+            num_classes=self.output_channels)
 
         #miou = iou.add(logits.detach(), mask.detach())
         #_, miou = self.iou.add(logits.argmax(dim=1).detach(), mask.detach())
@@ -434,7 +446,9 @@ class SegNet(pl.LightningModule):
         r"""Load pretrained VGG16 weight to SegNet.
         """
         pretrain = vgg16_bn(pretrained=True)
-        conv_bn = [i for i in pretrain.features.children() if isinstance(i, nn.Conv2d) or isinstance(i, nn.BatchNorm2d)]
+        conv_bn = [
+            i for i in pretrain.features.children() 
+            if isinstance(i, nn.Conv2d) or isinstance(i, nn.BatchNorm2d)]
         seg_conv = [
             self.conv_00[0], self.conv_00[1], 
             self.conv_01[0], self.conv_01[1],

@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_dir', type=str, default='save')
     parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--workers', type=int, default=8)
-    parser.add_argument('--lr', type=float, default=1e-2)
+    parser.add_argument('--lr', type=float, default=1e-1)
     parser.add_argument('--weight_decay', type=float, default=1e-6)
     parser.add_argument('--max_epochs', type=int, default=2_000)
     parser.add_argument('--batch_size', type=int, default=32)
