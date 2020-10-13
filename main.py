@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--workers', type=int, default=8)
     parser.add_argument('--lr', type=float, default=1e-1)
-    parser.add_argument('--weight_decay', type=float, default=1e-6)
+    parser.add_argument('--weight_decay', type=float, default=0.0)
     parser.add_argument('--max_epochs', type=int, default=1_200)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--precision', type=int, default=16)
@@ -68,7 +68,8 @@ if __name__ == '__main__':
         [0.0006, 0.0630, 0.1572, 0.0539, 0.0757,
          0.0770, 0.0263, 0.0326, 0.0173, 0.0405, 
          0.0552, 0.0356, 0.0275, 0.0500, 0.0409, 
-         0.0097, 0.0717, 0.0524, 0.0321, 0.0292, 0.0515])
+         0.0097, 0.0717, 0.0524, 0.0321, 0.0292, 
+         0.0515])
     class_weights = class_weights.cuda()
     
     early_stop_callback = EarlyStopping(
@@ -101,6 +102,6 @@ if __name__ == '__main__':
         precision=args.precision, 
         checkpoint_callback=checkpoint_callback,
         callbacks=callbacks)
-    #tuner = pl.tuner.tuning.Tuner(trainer)
-    #lr_finder_plot(model, trainer, train_dataloader, val_dataloader)
+    tuner = pl.tuner.tuning.Tuner(trainer)
+    # lr_finder_plot(model, trainer, train_dataloader, val_dataloader)
     trainer.fit(model, train_dataloader, val_dataloader)

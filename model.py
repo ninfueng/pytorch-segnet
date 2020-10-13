@@ -399,7 +399,6 @@ class SegNet(pl.LightningModule):
         self.log('train_miou', miou, on_epoch=True)
         return loss
     
-   #  
     # def on_epoch_start(self):
         # self.log('learning_rate', self.optimizers.param_groups[0]['lr'], on_epoch=true)
         # print(self.optimizer.param_groups[0]['lr'])
@@ -424,8 +423,8 @@ class SegNet(pl.LightningModule):
             logits.argmax(dim=1), mask, 
             ignore_index=self.ignore_idx,
             num_classes=self.output_channels)
-        self.log('val_loss', loss)
-        self.log('val_miou', miou)
+        self.log('val_loss', loss, on_epoch=True)
+        self.log('val_miou', miou, on_epoch=True)
         return loss
     
     # def validation_epoch_end(self, outputs):
