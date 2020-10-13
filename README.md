@@ -1,15 +1,18 @@
 # SegNet Implementation by Pytorch #
-This repo is a re-implementation of [SegNet](https://arxiv.org/abs/1511.00561). The code was forked from []().
+ehis repo is a Pytorch-lightning re-implementation of [SegNet](https://arxiv.org/abs/1511.00561). The code was forked from []().
 
 ## To run:
-1. load Pascal VOC2012 dataset. 
+* Load Pascal VOC2012 dataset. 
 ```bash
+cd pytorch-segnet/
 bash load_voc2012.sh
 ```
-2. Train and validate the model.
-
+* Train and validate the model. This will download pretrained VGG16 weights into the encoder section of SegNet.
 ```bash
 python main.py
+```
+* To download and evalute with my pretrained weights (TODO) 
+```
 ```
 
 ## Requirements:
@@ -20,10 +23,7 @@ numpy
 matplotlib
 ```
 
-<<<<<<< HEAD
 ## License
 ```
 MIT
-=======
->>>>>>> parent of ed85585... Add load_voc2012
 ```
