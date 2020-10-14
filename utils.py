@@ -26,7 +26,8 @@ def lr_finder_plot(
     else:
         lr_finder = trainer.lr_find(
             model, train_dataloader=train_dataloader,
-            val_dataloaders=val_dataloader)
+            val_dataloaders=val_dataloader,
+            min_lr=1e-6, max_lr=1e1)
     recommended_lr = lr_finder.suggestion()
     print(f'Recommended learning rate: {recommended_lr}')
     lr_finder.plot(suggest=True, show=True)
@@ -34,6 +35,7 @@ def lr_finder_plot(
 
 def cal_class_weights(train_dataloader, num_cls: int)-> torch.Tensor:
     r"""From: https://discuss.pytorch.org/t/weights-in-weighted-loss-nn-crossentropyloss/69514
+    Get weights of each class.
     The more labels the less amount of weights.
     """
     counter = Counter()

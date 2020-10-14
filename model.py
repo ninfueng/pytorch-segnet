@@ -49,189 +49,147 @@ class SegNet(pl.LightningModule):
         self.conv_00 = nn.Sequential(
             nn.Conv2d(
                 in_channels=self.input_channels,
-                out_channels=64,
-                kernel_size=3,
-                padding=1),
+                out_channels=64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_01 = nn.Sequential(
             nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                padding=1),
+                in_channels=64, out_channels=64,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=self.INPLACE))
         self.conv_10 = nn.Sequential(
             nn.Conv2d(
-                in_channels=64,
-                out_channels=128,
-                kernel_size=3,
-                padding=1),
+                in_channels=64, out_channels=128,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_11 = nn.Sequential(
             nn.Conv2d(
-                in_channels=128,
-                out_channels=128,
-                kernel_size=3,
-                padding=1),
+                in_channels=128, out_channels=128,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_20 = nn.Sequential(
             nn.Conv2d(
-                in_channels=128,
-                out_channels=256,
-                kernel_size=3,
-                padding=1),
+                in_channels=128, out_channels=256,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_21 = nn.Sequential(
             nn.Conv2d(
-                in_channels=256,
-                out_channels=256,
-                kernel_size=3,
-                padding=1),
+                in_channels=256, out_channels=256,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_22 = nn.Sequential(
             nn.Conv2d(
-                in_channels=256,
-                out_channels=256,
-                kernel_size=3,
-                padding=1),
+                in_channels=256, out_channels=256,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_30 = nn.Sequential(
             nn.Conv2d(
-                in_channels=256,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=256, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_31 = nn.Sequential(
             nn.Conv2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_32 = nn.Sequential(
             nn.Conv2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))        
 
         self.conv_40 = nn.Sequential(
             nn.Conv2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_41 = nn.Sequential(
             nn.Conv2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         self.conv_42 = nn.Sequential(
             nn.Conv2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         # Decoder layers
         self.deconv_42 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_41 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_40 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_32 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_31 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=512,
-                out_channels=512,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=512,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_30 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=512,
-                out_channels=256,
-                kernel_size=3,
-                padding=1),
+                in_channels=512, out_channels=256,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_22 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=256,
-                out_channels=256,
-                kernel_size=3,
-                padding=1),
+                in_channels=256, out_channels=256,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_21 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=256,
-                out_channels=256,
-                kernel_size=3,
-                padding=1),
+                in_channels=256, out_channels=256,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=self.INPLACE))
 
@@ -246,37 +204,29 @@ class SegNet(pl.LightningModule):
 
         self.deconv_11 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=128,
-                out_channels=128,
-                kernel_size=3,
-                padding=1),
+                in_channels=128, out_channels=128,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_10 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=128,
-                out_channels=64,
-                kernel_size=3,
-                padding=1),
+                in_channels=128, out_channels=64,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_01 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                padding=1),
+                in_channels=64, out_channels=64,
+                kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=self.INPLACE))
 
         self.deconv_00 = nn.Sequential(
             nn.ConvTranspose2d(
-                in_channels=64,
-                out_channels=self.output_channels,
-                kernel_size=3,
-                padding=1))
+                in_channels=64, out_channels=self.output_channels,
+                kernel_size=3, padding=1))
 
     def forward(self, input_img):
         # Encoder Stage - 1
@@ -357,9 +307,8 @@ class SegNet(pl.LightningModule):
         x_01d = self.deconv_01(x_0d)
         x_00d = self.deconv_00(x_01d)
         dim_0d = x_00d.size()
-        #x_softmax = F.softmax(x_00d, dim=1)
 
-        return x_00d#, x_softmax
+        return x_00d
 
     def configure_optimizers(self):
         

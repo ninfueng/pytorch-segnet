@@ -22,14 +22,14 @@ if __name__ == '__main__':
     parser.add_argument('--workers', type=int, default=8)
     parser.add_argument('--lr', type=float, default=1e-1)
     parser.add_argument('--weight_decay', type=float, default=0.0)
-    parser.add_argument('--max_epochs', type=int, default=1_200)
+    parser.add_argument('--max_epochs', type=int, default=10_000)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--precision', type=int, default=16)
     parser.add_argument('--seed', type=int, default=2020)
     args = parser.parse_args()
 
     NUM_CLASSES = 21
-    MILESTONES = [300, 600, 900]
+    MILESTONES = [2_000, 4_000, 6_000, 8_000]
     RESIZE_SIZE = (256, 256)
     CROP_SIZE = (224, 224)
     IN_CHANNEL = 3
@@ -73,11 +73,9 @@ if __name__ == '__main__':
     class_weights = class_weights.cuda()
     
     early_stop_callback = EarlyStopping(
-        monitor='val_loss',
-        min_delta=0.00,
-        patience=10,
-        verbose=True,
-        mode='min')
+        monitor='val_loss', min_delta=0.00,
+        patience=10, verbose=True, mode='min')
+    
     callbacks = [
         #early_stop_callback,
         #lr_monitor,
@@ -103,5 +101,5 @@ if __name__ == '__main__':
         checkpoint_callback=checkpoint_callback,
         callbacks=callbacks)
     tuner = pl.tuner.tuning.Tuner(trainer)
-    # lr_finder_plot(model, trainer, train_dataloader, val_dataloader)
+    #lr_finder_plot(model, trainer, train_dataloader, val_dataloader)
     trainer.fit(model, train_dataloader, val_dataloader)
